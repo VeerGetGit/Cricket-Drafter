@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Draft & Match</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Decorative balls -->
+<div class="ball-decoration" style="top:12%; left:7%;"></div>
+<div class="ball-decoration" style="top:55%; right:6%; width:9px; height:9px; opacity:0.18;"></div>
+<div class="ball-decoration" style="bottom:20%; left:12%; width:8px; height:8px; opacity:0.15;"></div>
+
+<div class="container">
+
+    <!-- ══════════════════════════════
+         PHASE: DRAFT
+    ══════════════════════════════ -->
+    <div id="phase-draft" class="phase">
+
+        <div class="header-wrap">
+            <h1><span class="emoji-bat">🏏</span> Cricket Draft</h1>
+            <p class="subtitle">Squad Selection System</p>
+        </div>
+
+        <!-- Toss Card -->
+        <div class="card">
+            <p class="card-title">⚡ Toss Configuration</p>
+            <div class="input-row">
+                <input id="c1" placeholder="Captain 1" autocomplete="off">
+                <input id="c2" placeholder="Captain 2" autocomplete="off">
+            </div>
+            <div class="input-row">
+                <select id="call">
+                    <option value="head">🪙 Heads</option>
+                    <option value="tail">🪙 Tails</option>
+                </select>
+                <button onclick="start()">Toss the Coin</button>
+            </div>
+        </div>
+
+        <h2 id="result"></h2>
+        <h3 id="turn"></h3>
+
+        <p class="players-label" id="players-label"></p>
+        <div id="players" class="players"></div>
+
+        <!-- Match Launch Banner (shown after draft completes) -->
+        <div id="match-launch-banner" class="match-launch-banner hidden">
+            <div class="mlb-left">
+                <div class="mlb-icon">🏟️</div>
+                <div>
+                    <div class="mlb-title">Draft Complete!</div>
+                    <div class="mlb-sub">Ready to start the match?</div>
+                </div>
+            </div>
+            <button class="mlb-btn" onclick="goToMatchSetup()">Start Match →</button>
+        </div>
+
+        <div class="pitch-divider">
+            <span class="pitch-divider-icon">🏟️</span>
+        </div>
+
+        <div class="teams">
+            <div class="team" data-num="1">
+                <h3>Team 1</h3>
+                <p id="team1"></p>
+            </div>
+            <div class="team" data-num="2">
+                <h3>Team 2</h3>
+                <p id="team2"></p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════
+         PHASE: MATCH SETUP
+    ══════════════════════════════ -->
+    <div id="phase-match_setup" class="phase hidden">
+
+        <div class="header-wrap">
+            <h1>⚙️ Match Setup</h1>
+            <p class="subtitle">Configure the match</p>
+        </div>
+
+        <div class="card" style="max-width:480px;">
+            <p class="card-title">🏏 Match Configuration</p>
+
+            <div class="input-row">
+                <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
+                    <label class="input-label">Team 1 Name</label>
+                    <input id="ms-team1-name" placeholder="Team 1" autocomplete="off">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
+                    <label class="input-label">Team 2 Name</label>
+                    <input id="ms-team2-name" placeholder="Team 2" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
+                    <label class="input-label">Total Overs</label>
+                    <input id="ms-overs" type="number" min="1" max="50" value="5">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
+                    <label class="input-label">Wickets per Innings</label>
+                    <input id="ms-wickets" type="number" min="1" max="10" value="10">
+                </div>
+            </div>
+
+            <div class="input-row" style="margin-top:8px;">
+                <button onclick="startMatch()" style="flex:1;">Begin Match 🏏</button>
+                <button onclick="showPhase('draft')" class="btn-secondary">← Back to Draft</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════
+         PHASE: MATCH (SCORING)
+    ══════════════════════════════ -->
+    <div id="phase-match" class="phase hidden">
+
+        <div class="header-wrap" style="margin-bottom:20px;">
+            <h1>🏏 Live Match</h1>
+            <p class="subtitle" id="m-innings">1st Innings</p>
+        </div>
+
+        <!-- Innings Banner -->
+        <div class="innings-banner">
+            <div>
+                <div class="innings-label">Batting</div>
+                <div class="innings-val" id="m-batting">—</div>
+            </div>
+            <div style="flex:1;"></div>
+            <div style="text-align:right;">
+                <div class="innings-label">Bowling</div>
+                <div class="innings-val" id="m-bowling">—</div>
+            </div>
+        </div>
+
+        <!-- Target Bar (2nd innings) -->
+        <div id="m-target-bar" class="target-bar hidden">
+            <div class="target-pill" id="m-target">Target: —</div>
+            <div class="target-pill lead" id="m-need">Need: —</div>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="scoreboard">
+            <div class="score-header">
+                <div>
+                    <div class="batting-team">Score</div>
+                    <div class="score-big" id="m-score">0/0</div>
+                    <div class="score-detail" id="m-overs">0.0 / 5 ov</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+                    <div class="info-pill">CRR: <span id="m-crr">0.00</span></div>
+                    <div class="info-pill">This Over: <span id="m-this-over">0</span></div>
+                    <div class="info-pill">Extras: <span id="m-extras">0</span></div>
+                </div>
+            </div>
+
+            <!-- Wicket Tracker -->
+            <div class="wicket-tracker">
+                <div class="wicket-tracker-label">Wickets</div>
+                <div class="wicket-dots" id="m-wicket-dots"></div>
+            </div>
+
+            <!-- Current Over Dots -->
+            <div class="over-section-label">This Over</div>
+            <div class="over-dots" id="m-over-dots"></div>
+
+            <!-- Over History -->
+            <div class="over-history" id="m-over-history"></div>
+        </div>
+
+        <!-- Scoring Buttons -->
+        <div class="section-label">Score a Ball</div>
+
+        <div class="score-controls">
+            <div class="run-grid">
+                <button class="run-btn" onclick="addBall(0)">0</button>
+                <button class="run-btn" onclick="addBall(1)">1</button>
+                <button class="run-btn" onclick="addBall(2)">2</button>
+                <button class="run-btn" onclick="addBall(3)">3</button>
+                <button class="run-btn run-four" onclick="addBall(4)">4</button>
+                <button class="run-btn" onclick="addBall(5)">5</button>
+                <button class="run-btn run-six" onclick="addBall(6)">6</button>
+                <button class="run-btn run-wicket" onclick="addBall('W')">
+                    <span class="wicket-icon">W</span>
+                    <span class="wicket-sub">Wicket</span>
+                </button>
+            </div>
+
+            <div class="extra-grid">
+                <button class="run-btn run-extra" onclick="addBall('WD')">Wide</button>
+                <button class="run-btn run-extra" onclick="addBall('NB')">No Ball</button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-row">
+            <button class="action-btn" onclick="undoLast()">↩ Undo</button>
+            <button class="action-btn action-danger" onclick="endInningsManual()">End Innings</button>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════
+         PHASE: RESULT
+    ══════════════════════════════ -->
+    <div id="phase-result" class="phase hidden">
+
+        <div class="result-screen">
+            <div class="result-trophy">🏆</div>
+            <div class="result-title" id="r-winner">Team Wins!</div>
+            <div class="result-margin" id="r-margin">by 10 runs</div>
+
+            <div class="result-scorecard">
+                <div class="rc-team">
+                    <div class="rc-name" id="r-t1-name">Team 1</div>
+                    <div class="rc-score" id="r-t1-score">0/0</div>
+                    <div class="rc-meta" id="r-t1-overs">0.0 overs</div>
+                    <div class="rc-meta" id="r-t1-extras">Extras: 0</div>
+                </div>
+                <div class="rc-vs">VS</div>
+                <div class="rc-team">
+                    <div class="rc-name" id="r-t2-name">Team 2</div>
+                    <div class="rc-score" id="r-t2-score">0/0</div>
+                    <div class="rc-meta" id="r-t2-overs">0.0 overs</div>
+                    <div class="rc-meta" id="r-t2-extras">Extras: 0</div>
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <button onclick="newMatch()">🔄 New Match</button>
+                <button onclick="fullReset()" class="btn-secondary">← Back to Draft</button>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<script src="/static/script.js"></script>
+<script>
+    // Init — show draft phase
+    showPhase("draft");
+</script>
+</body>
+</html>
